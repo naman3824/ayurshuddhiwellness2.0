@@ -3,40 +3,91 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import Navbar from '../../components/layout/Navbar'
+import { EASE } from '../../components/ui/motion'
+import { STORY_BEATS } from '../../lib/about-content'
 import styles from './about-v2.module.css'
 
-// Content + imagery lifted from the current /about page (AboutStory beats).
-const SLIDES = [
-  {
-    eyebrow: '01 — The Roots',
-    headline: 'A practice rooted in lineage.',
-    body: 'AyurshuddhiWellness began not as a business, but as a continuation of family tradition — Ayurvedic knowledge passed down through generations.',
-    image: '/images/practitioner/founder_image_1.JPEG',
-    alt: 'Founder — family roots in Ayurveda',
-  },
-  {
-    eyebrow: '02 — The Study',
-    headline: 'Refined through study.',
-    body: 'What started as personal practice grew through rigorous clinical training, adapting centuries-old methods for the lives we live today.',
-    image: '/images/practitioner/founder_image_2.jpg',
-    alt: 'Founder — clinical training and study',
-  },
-  {
-    eyebrow: '03 — The Practice',
-    headline: 'Grown into a community.',
-    body: 'Every consultation we offer carries that same intention: to treat the person, not just the symptom.',
-    image: '/images/practitioner/founder_image_3.JPEG',
-    alt: 'Founder — community practice',
-  },
-]
+// Shared About story beats + real founder photography (distinct per slide).
+// Swap `image` in lib/about-content.js to change photos in one place.
+const SLIDES = STORY_BEATS
 
 const FOOTER_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Blogs', href: '/blogs' },
   { label: 'Book Now', href: '/#contact' },
 ]
+
+const EYEBROW = 'mb-5 font-sans text-[11px] uppercase tracking-[0.25em] text-primary'
+const HEADLINE =
+  'font-serif text-[clamp(2.5rem,6vw,5rem)] font-normal leading-tight text-foreground'
+const BODY = 'mt-6 max-w-md font-sans text-base leading-relaxed text-muted'
+
+const FADE_UP = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
+}
+
+// Distinct image enter per slide: scale-in for 1 & 2, horizontal slide for 3.
+function imageVariants(i, reduce) {
+  if (reduce) return { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+  if (i === 2) return { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0 } }
+  return { hidden: { opacity: 0, scale: i === 1 ? 1.08 : 1.06 }, visible: { opacity: 1, scale: 1 } }
+}
+
+function TextBlock({ slide, index, active, reduce }) {
+  if (reduce) {
+    return (
+      <div>
+        <p className={EYEBROW}>{slide.eyebrow}</p>
+        <h2 className={HEADLINE}>{slide.headline}</h2>
+        <p className={BODY}>{slide.body}</p>
+      </div>
+    )
+  }
+
+  // Slide 3 (2→3): word-by-word "lighting" reveal instead of a simple fade.
+  if (index === 2) {
+    const words = slide.headline.split(' ')
+    return (
+      <motion.div
+        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.15 } } }}
+        initial="hidden"
+        animate={active ? 'visible' : 'hidden'}
+      >
+        <motion.p variants={FADE_UP} className={EYEBROW}>
+          {slide.eyebrow}
+        </motion.p>
+        <h2 className={HEADLINE}>
+          {words.map((w, wi) => (
+            <motion.span key={wi} variants={FADE_UP} className="inline-block">
+              {w}
+              {wi < words.length - 1 ? ' ' : ''}
+            </motion.span>
+          ))}
+        </h2>
+        <motion.p variants={FADE_UP} className={BODY}>
+          {slide.body}
+        </motion.p>
+      </motion.div>
+    )
+  }
+
+  // Slides 1 & 2: block fade-up. Slide 2 (1→2) arrives staggered after the image.
+  const delay = index === 1 ? 0.25 : 0.05
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.8, ease: EASE, delay: active ? delay : 0 }}
+    >
+      <p className={EYEBROW}>{slide.eyebrow}</p>
+      <h2 className={HEADLINE}>{slide.headline}</h2>
+      <p className={BODY}>{slide.body}</p>
+    </motion.div>
+  )
+}
 
 export default function AboutV2Page() {
   const [current, setCurrent] = useState(0)
@@ -51,7 +102,7 @@ export default function AboutV2Page() {
     reduceRef.current = reduce
   }, [reduce])
 
-  // Lock page scroll — this is a full-screen wheel-driven experience.
+  // Lock page scroll — full-screen wheel-driven experience.
   useEffect(() => {
     const html = document.documentElement
     const prevHtml = html.style.overflow
@@ -65,7 +116,7 @@ export default function AboutV2Page() {
   }, [])
 
   // Advance/reverse with a debounce flag (ref, not state — avoids stale
-  // closures in the window-level event handlers registered once).
+  // closures in the window-level handlers registered once).
   const goTo = useCallback((dir) => {
     if (isAnimatingRef.current) return
     const next = Math.min(Math.max(currentRef.current + dir, 0), SLIDES.length - 1)
@@ -73,12 +124,9 @@ export default function AboutV2Page() {
     currentRef.current = next
     isAnimatingRef.current = true
     setCurrent(next)
-    setTimeout(
-      () => {
-        isAnimatingRef.current = false
-      },
-      reduceRef.current ? 400 : 1000,
-    )
+    setTimeout(() => {
+      isAnimatingRef.current = false
+    }, reduceRef.current ? 400 : 1000)
   }, [])
 
   // Wheel / keyboard / touch navigation
@@ -117,8 +165,8 @@ export default function AboutV2Page() {
     }
   }, [goTo])
 
-  // Mouse parallax on the active slide's image — direct DOM writes via refs,
-  // no re-renders. Disabled entirely under reduced motion.
+  // Mouse parallax on the active slide's image (right side) — direct DOM writes
+  // via refs, no re-renders. Disabled entirely under reduced motion.
   useEffect(() => {
     if (reduce) return
     const onMove = (e) => {
@@ -133,7 +181,7 @@ export default function AboutV2Page() {
 
   return (
     <div className="h-screen w-full overflow-hidden bg-background">
-      {/* Navbar — standard overlay on the linen slides */}
+      {/* Navbar — fixed overlay */}
       <div className="fixed inset-x-0 top-0 z-50">
         <Navbar />
       </div>
@@ -142,45 +190,49 @@ export default function AboutV2Page() {
       {SLIDES.map((slide, i) => {
         const active = i === current
         return (
-          <section
+          <motion.section
             key={slide.eyebrow}
             aria-hidden={!active}
-            className={`${styles.slide} ${active ? styles.active : ''} z-10`}
+            initial={false}
+            animate={{ opacity: active ? 1 : 0 }}
+            transition={{ duration: reduce ? 0 : 0.6, ease: EASE }}
+            style={{ pointerEvents: active ? 'auto' : 'none' }}
+            className={`${styles.slide} z-10`}
           >
-            {/* Upper-right triangle — text side */}
-            <div className={`${styles.topTriangle} bg-background`}>
-              <div className="absolute right-[8%] top-[40%] max-w-xl -translate-y-1/2 text-right">
-                <p className="mb-5 font-sans text-[11px] uppercase tracking-[0.25em] text-primary">
-                  {slide.eyebrow}
-                </p>
-                <h2 className="font-serif text-[clamp(2.75rem,6.5vw,5.25rem)] font-normal leading-tight text-foreground">
-                  {slide.headline}
-                </h2>
-                <p className="ml-auto mt-6 max-w-md font-sans text-base leading-relaxed text-muted">
-                  {slide.body}
-                </p>
+            {/* Text triangle — upper-left. Width capped to stay left of the seam. */}
+            <div className={`${styles.textTriangle} bg-background`}>
+              <div className="absolute left-[6%] top-[22%] max-w-[34%]">
+                <TextBlock slide={slide} index={i} active={active} reduce={reduce} />
               </div>
             </div>
 
-            {/* Lower-left triangle — image side */}
-            <div className={styles.bottomTriangle}>
-              <div
-                ref={(el) => {
-                  imgRefs.current[i] = el
-                }}
-                className={`relative h-full w-full ${styles.parallax}`}
+            {/* Image triangle — lower-right */}
+            <div className={styles.imageTriangle}>
+              <motion.div
+                className="h-full w-full"
+                variants={imageVariants(i, reduce)}
+                initial="hidden"
+                animate={active ? 'visible' : 'hidden'}
+                transition={{ duration: reduce ? 0 : 0.9, ease: EASE }}
               >
-                <Image
-                  src={slide.image}
-                  alt={slide.alt}
-                  fill
-                  sizes="100vw"
-                  className="object-cover object-[30%_center]"
-                  priority={i === 0}
-                />
-              </div>
+                <div
+                  ref={(el) => {
+                    imgRefs.current[i] = el
+                  }}
+                  className={`relative h-full w-full ${styles.parallax}`}
+                >
+                  <Image
+                    src={slide.image}
+                    alt={slide.alt}
+                    fill
+                    sizes="100vw"
+                    className="object-cover object-[70%_center]"
+                    priority={i === 0}
+                  />
+                </div>
+              </motion.div>
             </div>
-          </section>
+          </motion.section>
         )
       })}
 

@@ -1,8 +1,7 @@
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 import Hero from '../components/sections/Hero'
-import AboutHero from '../components/sections/AboutHero'
-import AboutStory from '../components/sections/AboutStory'
+import AboutV2Section from '../components/sections/AboutV2Section'
 import PhilosophyPillars from '../components/sections/PhilosophyPillars'
 import RootedInTradition from '../components/sections/RootedInTradition'
 import Journal from '../components/sections/Journal'
@@ -15,19 +14,16 @@ export default function HomePage() {
         {/* 1 — Landing hero */}
         <Hero />
 
-        {/* 2 — About: Our Story hero (stat counter + botanical SVG) */}
-        <AboutHero />
+        {/* 2 — About: diagonal-split scroll-driven slideshow (v2) */}
+        <AboutV2Section />
 
-        {/* 3 — About: Scroll-triggered story (sticky image + 3 beats) */}
-        <AboutStory />
-
-        {/* 4 — Merged Philosophy + 3 Pillars (rising panel) */}
+        {/* 3 — Merged Philosophy + 3 Pillars (rising panel) */}
         <PhilosophyPillars />
 
-        {/* 5 — Rooted in tradition / apothecary */}
+        {/* 4 — Rooted in tradition / apothecary */}
         <RootedInTradition />
 
-        {/* 6 — Journal */}
+        {/* 5 — Journal */}
         <Journal />
       </main>
       <Footer />

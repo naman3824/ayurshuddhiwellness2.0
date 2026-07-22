@@ -86,14 +86,26 @@ export default function Navbar({ glass = false }) {
           ))}
         </nav>
 
-        {/* CTA — desktop */}
-        <AnimatedLink
-          href="/#contact"
-          onClick={(e) => handleNavClick(e, '/#contact')}
-          className="hidden rounded-full bg-primary px-6 py-2.5 font-sans text-sm font-medium text-white transition-colors duration-300 hover:bg-primary-hover md:inline-flex md:items-center"
-        >
-          Book Now
-        </AnimatedLink>
+        {/* Right — auth + CTA (desktop) */}
+        <div className="hidden items-center gap-3 md:flex">
+          <Link
+            href="/login"
+            className={`rounded-full border px-5 py-2 font-sans text-sm font-medium transition-colors duration-300 ${
+              glass
+                ? 'border-background/30 text-background hover:bg-background/10'
+                : 'border-border text-foreground hover:border-primary hover:text-primary'
+            }`}
+          >
+            Login
+          </Link>
+          <AnimatedLink
+            href="/#contact"
+            onClick={(e) => handleNavClick(e, '/#contact')}
+            className="rounded-full bg-primary px-6 py-2.5 font-sans text-sm font-medium text-white transition-colors duration-300 hover:bg-primary-hover md:inline-flex md:items-center"
+          >
+            Book Now
+          </AnimatedLink>
+        </div>
 
         {/* Hamburger — mobile */}
         <button
@@ -141,13 +153,23 @@ export default function Navbar({ glass = false }) {
                 {link.label}
               </Link>
             ))}
-            <AnimatedLink
-              href="/#contact"
-              onClick={(e) => handleNavClick(e, '/#contact')}
-              className="mt-2 inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 font-sans text-sm font-medium text-white transition-colors duration-300 hover:bg-primary-hover"
-            >
-              Book Now
-            </AnimatedLink>
+            {/* Auth + CTA (mobile) */}
+            <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="inline-flex justify-center rounded-full border border-border px-6 py-2.5 font-sans text-sm font-medium text-foreground transition-colors duration-300 hover:border-primary hover:text-primary"
+              >
+                Login
+              </Link>
+              <AnimatedLink
+                href="/#contact"
+                onClick={(e) => handleNavClick(e, '/#contact')}
+                className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 font-sans text-sm font-medium text-white transition-colors duration-300 hover:bg-primary-hover"
+              >
+                Book Now
+              </AnimatedLink>
+            </div>
           </nav>
         </div>
       )}
